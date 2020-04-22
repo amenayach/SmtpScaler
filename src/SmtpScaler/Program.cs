@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,13 +11,23 @@ namespace SmtpScaler
         {
             var emails = EmailProvider.Generate(300);
             var emailSettings = Config.GetSection<EmailSettings>(sectionName: "emailSettings");
-            var emailService = new EmailService(emailSettings);
+            var stopwatch = new Stopwatch();
 
-            emails.AsParallel().ForAll(async m =>
+            using (var emailService = new EmailService(emailSettings, 40))
             {
-                await emailService.SendAsync(m, $"Some content {Guid.NewGuid()}", m);
-                Console.WriteLine(m);
-            });
+                stopwatch.Start();
+                var tasks = emails.AsParallel().Select(async m =>
+                {
+                    await emailService.SendAsync(m, $"Some content {Guid.NewGuid()}", m);
+                    Console.WriteLine(m);
+                });
+
+                await Task.WhenAll(tasks);
+
+                stopwatch.Stop();
+                
+                $"Elapsed {stopwatch.ElapsedMilliseconds}ms".Print();
+            }
 
             "Hit enter to exit".Print(ConsoleColor.Yellow);
             Console.ReadLine();

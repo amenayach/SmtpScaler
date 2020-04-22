@@ -10,10 +10,18 @@
         private readonly List<SmtpClientWrapper> wrappers;
         private readonly EmailSettings emailSettings;
         private readonly object locker = new Object();
+        private readonly int maxAllowedClients;
 
-        public EmailService(EmailSettings emailSettings)
+        public EmailService(EmailSettings emailSettings, int maxAllowedClients = 10)
         {
-            this.emailSettings = emailSettings;
+            this.emailSettings = emailSettings ?? throw new ArgumentNullException(nameof(emailSettings));
+
+            if (maxAllowedClients <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(emailSettings));
+            }
+
+            this.maxAllowedClients = maxAllowedClients;
             this.wrappers = new List<SmtpClientWrapper>();
         }
 
@@ -24,7 +32,6 @@
             lock (locker)
             {
                 wrapper = PromoteWrapper();
-                Console.WriteLine($"wrappers count {this.wrappers.Count}");
             }
 
             await wrapper.SendAsync(subject, body, recipients);
@@ -36,6 +43,12 @@
             
             if (wrapper == null)
             {
+                if (this.wrappers.Count >= maxAllowedClients)
+                {
+                    System.Threading.Thread.Sleep(300);
+                    return PromoteWrapper();
+                }
+
                 wrapper = new SmtpClientWrapper(emailSettings);
                 this.wrappers.Add(wrapper);
             }
