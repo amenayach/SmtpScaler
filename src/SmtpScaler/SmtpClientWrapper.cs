@@ -66,7 +66,10 @@
                         }
                     }
 
-                    await smtpClient.SendMailAsync(mailMessage);
+                    await Extensions.Retry(async () =>
+                    {
+                        await smtpClient.SendMailAsync(mailMessage);
+                    });
                 }
             }
             finally

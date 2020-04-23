@@ -25,7 +25,7 @@ namespace SmtpScaler
                 await Task.WhenAll(tasks);
 
                 stopwatch.Stop();
-                
+
                 $"Elapsed {stopwatch.ElapsedMilliseconds}ms".Print();
             }
 

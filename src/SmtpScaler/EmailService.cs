@@ -12,7 +12,7 @@
         private readonly object locker = new Object();
         private readonly int maxAllowedClients;
 
-        public EmailService(EmailSettings emailSettings, int maxAllowedClients = 10)
+        public EmailService(EmailSettings emailSettings, int maxAllowedClients = 8)
         {
             this.emailSettings = emailSettings ?? throw new ArgumentNullException(nameof(emailSettings));
 
